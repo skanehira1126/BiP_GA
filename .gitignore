@@ -100,5 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 
-#Mac
+# Mac
 .DS_Store
+
+# Test notebook
+TSP_test.ipynb

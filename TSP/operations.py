@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 class operations(object):
-    def __init__(self, l_gen, n_parents, crs_prob= None, mut_prob= None):
+    def __init__(self, l_gen, n_parents, crs_ratio= None, mut_ratio= None):
         self.l_gen = l_gen
         self.n_parents = n_parents
         # ----------- functions
@@ -20,44 +20,44 @@ class operations(object):
         print("------- Information of Genetic Algorithm operation  -------")
         print(self.funcs)
         
-        for prob in [crs_prob, mut_prob]:
-            if type(prob) != list and type(prob) != np.ndarray and prob != None:
+        for ratio in [crs_ratio, mut_ratio]:
+            if type(ratio) != list and type(ratio) != np.ndarray and ratio != None:
                 raise TypeError("Probability should be list or numpy.ndarray")
-            if prob != None and sum(prob) != 1:
+            if ratio != None and sum(ratio) != 1:
                 raise ValueError("Sum ob probability should be 1.")
-        if crs_prob != None:
-            self.crs_prob = [float(i) for i in crs_prob]
-        if mut_prob != None:
-            self.mut_prob = [float(i) for i in mut_prob]
+        if crs_ratio != None:
+            self.crs_ratio = [float(i) for i in crs_ratio]
+        if mut_ratio != None:
+            self.mut_ratio = [float(i) for i in mut_ratio]
         
-        self._valid_probs = ["crs_prob", "mut_prob"]
+        self._valid_ratios = ["crs_ratio", "mut_ratio"]
         
     def get_funcs(self):
         return self.funcs
     
-    def set_probs(self, **params):
+    def set_ratios(self, **params):
         if not params:
             return self
-        for name, prob in params.items():
-            if type(prob) != list and type(prob) != np.ndarray :
+        for name, ratio in params.items():
+            if type(ratio) != list and type(ratio) != np.ndarray :
                 raise TypeError("Probability should be list or numpy.ndarray")
-            if name not in self._valid_probs:
-                raise ValueError("crs_prob or mut_prob only.")
-            if sum(prob) != 1:
+            if name not in self._valid_ratios:
+                raise ValueError("Parameter is crs_ratio or mut_ratio only.")
+            if sum(ratio) != 1:
                 raise ValueError("Sum of probability should be 1.")
-            if name == self._valid_probs[0] and len(self.crs_funcs) != len(prob):
-                raise ValueError("the number of parameters of {} is wrong.".format(self._valid_probs[0]))
-            if name == self._valid_probs[1] and len(self.mut_funcs) != len(prob):
-                raise ValueError("the number of parameters of {} is wrong.".format(self._valid_probs[1]))
+            if name == self._valid_ratios[0] and len(self.crs_funcs) != len(ratio):
+                raise ValueError("the number of parameters of {} is wrong.".format(self._valid_ratios[0]))
+            if name == self._valid_ratios[1] and len(self.mut_funcs) != len(ratio):
+                raise ValueError("the number of parameters of {} is wrong.".format(self._valid_ratios[1]))
             # ---------- set probability
-            setattr(self,name,[float(i) for i in prob])
+            setattr(self,name,[float(i) for i in ratio])
         return self
     
-    def get_probs(self):
+    def get_ratios(self):
         probs = {}
-        for name in self._valid_probs:
-            probs[name] = getattr(self,name)
-        return probs
+        for name in self._valid_ratios:
+            ratios[name] = getattr(self,name)
+        return ratios
          
     """Selection"""    
     def tournament_selection(self, t_size, p_size, fitness, population):
@@ -65,13 +65,13 @@ class operations(object):
         while parents.shape[0] < p_size:
             tounament = np.random.choice(range(len(population)),t_size)
             fits = np.array([fitness[i] for i in tounament])
-            parents = np.append(parents,population[tounament[np.argmin(fits)]].reshape(1,-1)
+            parents = np.append(parents,population[tounament[np.argmax(fits)]].reshape(1,-1)
                                 ,axis=0)
         return parents
     
     def elete_selection(self, e_size, fitness, population):
         indexer = np.array(fitness).argsort()
-        parents = population[indexer[:e_size]]
+        parents = population[indexer[-e_size:]]
         return parents
     
     """Crossover"""
