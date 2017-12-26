@@ -10,14 +10,14 @@ class operations(object):
         self.l_gen = l_gen
         self.n_parents = n_parents
         # ----------- functions
-        self.slct_funcs= [self.tournament_selection, self.elete_selection]
+        self.slct_funcs= [self.tournament_selection, self.elete_selection, self.roulette_selection]
         self.crs_funcs = [self.cycle_crossover, self.op_order_crossover,self.order_based_crossover]
         self.mut_funcs = [self.swap_mutation, self.inversion_mutation, self.scramble_mutation,
                      self.translocation_mutation]
         self.funcs = {}
-        self.funcs["Selection"] = ["Tournament", "Elete"]
+        self.funcs["Selection"] = ["tournament", "elete", "roulette"]
         self.funcs["Crossover"] = ["cycle", "op_order","order_based"]
-        self.funcs["Mutation"]  = ["Swap", "Inversion", "Scramble", "Translocation"]
+        self.funcs["Mutation"]  = ["swap", "inversion", "scramble", "translocation"]
         print("------- Information of Genetic Algorithm operation  -------")
         print(self.funcs)
         
@@ -73,14 +73,22 @@ class operations(object):
                                 ,axis=0)
         return parents
     
+    def roulette_selection(self, p_size, fitness, population):
+        sum_fitness = sum(fitness)
+        probability = [i/sum(fitness) for i in fitness]
+        parents = population[np.random.choice(xrange(len(population)), p_size,
+                                              p = probability, replace = False)]
+        return parents
+    
     def elete_selection(self, e_size, fitness, population):
         indexer = np.array(fitness).argsort()
         parents = population[indexer[-e_size:]]
         return parents
-    
-    """Crossover"""
+
+    # -------------- permutation encoding
+    """Crossover for permutation encoding"""
     def cycle_crossover(self, parents1, parents2):
-        p1, p2 = copy.copy(parents1), copy.copy(parents2)
+        p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
         p_list = np.arange(self.l_gen)
         cycles = []
         while len(p_list) != 0:
@@ -117,7 +125,7 @@ class operations(object):
         return self.child
     
     def op_order_crossover(self, parents1, parents2):
-        p1, p2 = copy.copy(parents1), copy.copy(parents2)
+        p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
         a = np.random.randint(0,self.l_gen-1)
         c1 = np.append(p1[:a],np.array([i for i in p2 if i not in p1[:a]]))
         c2 = np.append(p2[:a],np.array([i for i in p1 if i not in p2[:a]]))
@@ -133,9 +141,10 @@ class operations(object):
         self.child = [c1,c2][np.random.choice([0,1])]
         return self.child
     
-    """Mutation"""
+    """Mutation for permutation encoding"""
     def swap_mutation(self, parent):
         #print("swap mutation")
+        parent = copy.deepcopy(parent)
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
         self.child[a], self.child[b] = parent[b], parent[a]
         return self.child
@@ -143,7 +152,7 @@ class operations(object):
     def inversion_mutation(self, parent):
         #print("inversion mutation")
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
-        pre_parent = parent.copy()
+        pre_parent = parent.deepcopy()
         if a > b:
             a, b = b,a
         for i in range(self.l_gen):
@@ -155,6 +164,7 @@ class operations(object):
          
     def scramble_mutation(self, parent):
         #print("scramble mutation")
+        parent = copy.deepcopy(parent)
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
         if a > b:
             a, b = b,a
@@ -193,5 +203,7 @@ class operations(object):
             else:
                 self.child[i] = pre_parent[i]
         return self.child
+    
+    # ----------- binary encoding
 
 
