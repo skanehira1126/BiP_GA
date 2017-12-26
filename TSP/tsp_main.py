@@ -5,7 +5,7 @@ from operations import operations
 
 class tsp_ga(operations):
     def __init__(self, l_gen, n_pop, n_parents, e_size, pb_mut, pb_crs, 
-                 crs_ratio =None, mut_ratio = None):
+                 crs_ratio = None, mut_ratio = None):
         super(tsp_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
         
         # ---------- change available
@@ -34,16 +34,17 @@ class tsp_ga(operations):
             name,_,_ = name.partition('__')
             if name not in self.valid_params:
                 raise ValueError("Input parameter {} is not exist.".format(name))
-            setattr(self,name,value)
+            setattr(self,name,value)            
         return self   
     
     def get_params(self):
         params = {}
         for name in self.valid_params:
-            if "func" in name:
-                params[name] = getattr(self,name).__name__
-            else :
-                params[name] = getattr(self,name)
+            if getattr(self,name) != None:
+                if "func" in name:
+                    params[name] = getattr(self,name).__name__
+                else :
+                    params[name] = getattr(self,name)
         return params
     
     def make_init_generation(self):

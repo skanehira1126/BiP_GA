@@ -31,6 +31,9 @@ class operations(object):
         if mut_ratio != None:
             self.mut_ratio = [float(i) for i in mut_ratio]
         
+        # ------ Operation ratios 
+        self.crs_ratio = crs_ratio
+        self.mut_ratio = mut_ratio
         self._valid_ratios = ["crs_ratio", "mut_ratio"]
         
     def get_funcs(self):
@@ -122,53 +125,46 @@ class operations(object):
         return self.child
     
     def order_based_crossover(self, parents1, parents2):
-        p1, p2 = copy.copy(parents1), copy.copy(parents2)
-        n_replace = np.random.choice(range(1,self.l_gen-1))
-        index = sorted(np.random.choice(range(0,self.l_gen),n_replace,replace=False))
-        p1_num, p2_num = p1[index], p2[index]
-        for i in range(self.l_gen):
-            if p1[i] in p2[index]:
-                p1[i] = p2_num[0]
-                p2_index = np.delete(p2_num,0)
-            if p2[i] in p1[index]:
-                p2[i] = p1_num[0]
-                p1_index = np.delete(p1_num,0)
-        
-        self.child = [p1,p2][np.random.choice([0,1])]
+        c1,c2 = copy.deepcopy(parents1) ,copy.deepcopy(parents2)
+        index = np.random.choice(range(0,self.l_gen),np.random.choice(range(2,self.l_gen-1)),replace=False)
+        chng_index1 = sorted([np.where(parents1 == i)[0][0] for i in parents2[index]])
+        chng_index2 = sorted([np.where(parents2 == i)[0][0] for i in parents1[index]])
+        c1[chng_index1] , c2[chng_index2]= parents2[index] ,parents1[index]
+        self.child = [c1,c2][np.random.choice([0,1])]
         return self.child
     
     """Mutation"""
-    def swap_mutation(self, child):
+    def swap_mutation(self, parent):
         #print("swap mutation")
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
-        self.child[a], self.child[b] = child[b], child[a]
+        self.child[a], self.child[b] = parent[b], parent[a]
         return self.child
     
-    def inversion_mutation(self, child):
+    def inversion_mutation(self, parent):
         #print("inversion mutation")
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
-        pre_child = child.copy()
+        pre_parent = parent.copy()
         if a > b:
             a, b = b,a
         for i in range(self.l_gen):
             if a<=i and i<=b:
-                self.child[i] = pre_child[-(self.l_gen-b)-i+a]
+                self.child[i] = pre_parent[-(self.l_gen-b)-i+a]
             else:
-                self.child[i] = pre_child[i]
+                self.child[i] = pre_parent[i]
         return self.child
          
-    def scramble_mutation(self, child):
+    def scramble_mutation(self, parent):
         #print("scramble mutation")
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
         if a > b:
             a, b = b,a
-        self.child[a:b] = np.random.permutation(child[a:b])
+        self.child[a:b] = np.random.permutation(parent[a:b])
         return self.child
     
-    def translocation_mutation(self, child):
+    def translocation_mutation(self, parent):
         #print("translocation mutation")
         a,b = np.random.choice(np.arange(1, self.l_gen-1, 1),2,replace=False)
-        pre_child = child.copy()
+        pre_parent = parent.copy()
         if a > b:
             a, b = b, a
         n = np.random.choice([-1,1])
@@ -185,17 +181,17 @@ class operations(object):
         count = 0
         for i in range(self.l_gen):
             if a+stride*n <= i and i <= b+stride*n :
-                self.child[i] = pre_child[i-stride*n]
+                self.child[i] = pre_parent[i-stride*n]
             elif b+stride*n < i and i <= b and n == -1:
                 count = count +1
-                self.child[i] = pre_child[a-n*(count-stride)-1]
+                self.child[i] = pre_parent[a-n*(count-stride)-1]
             
             elif a <= i and i < a+stride*n and n == 1:
                 count = count +1
-                self.child[i] = pre_child[b+n*count]
+                self.child[i] = pre_parent[b+n*count]
 
             else:
-                self.child[i] = pre_child[i]
+                self.child[i] = pre_parent[i]
         return self.child
 
 

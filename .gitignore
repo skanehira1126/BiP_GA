@@ -105,3 +105,4 @@ ENV/
 
 # Test notebook
 TSP_test.ipynb
+tsp_graph/*
