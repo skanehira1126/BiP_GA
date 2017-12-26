@@ -3,6 +3,7 @@
 
 import random
 import numpy as np
+import copy
 
 class operations(object):
     def __init__(self, l_gen, n_parents, crs_ratio= None, mut_ratio= None):
@@ -10,12 +11,12 @@ class operations(object):
         self.n_parents = n_parents
         # ----------- functions
         self.slct_funcs= [self.tournament_selection, self.elete_selection]
-        self.crs_funcs = [self.cycle_crossover, self.op_order_crossover]
+        self.crs_funcs = [self.cycle_crossover, self.op_order_crossover,self.order_based_crossover]
         self.mut_funcs = [self.swap_mutation, self.inversion_mutation, self.scramble_mutation,
                      self.translocation_mutation]
         self.funcs = {}
         self.funcs["Selection"] = ["Tournament", "Elete"]
-        self.funcs["Crossover"] = ["Cycle", "OP order"]
+        self.funcs["Crossover"] = ["cycle", "op_order","order_based"]
         self.funcs["Mutation"]  = ["Swap", "Inversion", "Scramble", "Translocation"]
         print("------- Information of Genetic Algorithm operation  -------")
         print(self.funcs)
@@ -46,9 +47,9 @@ class operations(object):
             if sum(ratio) != 1:
                 raise ValueError("Sum of probability should be 1.")
             if name == self._valid_ratios[0] and len(self.crs_funcs) != len(ratio):
-                raise ValueError("the number of parameters of {} is wrong.".format(self._valid_ratios[0]))
+                raise ValueError("The number of {} parameters is wrong.".format(self._valid_ratios[0]))
             if name == self._valid_ratios[1] and len(self.mut_funcs) != len(ratio):
-                raise ValueError("the number of parameters of {} is wrong.".format(self._valid_ratios[1]))
+                raise ValueError("The number of {} parameters is wrong.".format(self._valid_ratios[1]))
             # ---------- set probability
             setattr(self,name,[float(i) for i in ratio])
         return self
@@ -75,8 +76,8 @@ class operations(object):
         return parents
     
     """Crossover"""
-    def cycle_crossover(self, p1 ,p2):
-        #print("cycle crossover")
+    def cycle_crossover(self, parents1, parents2):
+        p1, p2 = copy.copy(parents1), copy.copy(parents2)
         p_list = np.arange(self.l_gen)
         cycles = []
         while len(p_list) != 0:
@@ -112,12 +113,28 @@ class operations(object):
         self.child = [c1,c2][np.random.choice([0,1])]
         return self.child
     
-    def op_order_crossover(self, p1, p2):
-        #print("OP order crossover")
+    def op_order_crossover(self, parents1, parents2):
+        p1, p2 = copy.copy(parents1), copy.copy(parents2)
         a = np.random.randint(0,self.l_gen-1)
         c1 = np.append(p1[:a],np.array([i for i in p2 if i not in p1[:a]]))
         c2 = np.append(p2[:a],np.array([i for i in p1 if i not in p2[:a]]))
         self.child = [c1,c2][np.random.choice([0,1])]
+        return self.child
+    
+    def order_based_crossover(self, parents1, parents2):
+        p1, p2 = copy.copy(parents1), copy.copy(parents2)
+        n_replace = np.random.choice(range(1,self.l_gen-1))
+        index = sorted(np.random.choice(range(0,self.l_gen),n_replace,replace=False))
+        p1_num, p2_num = p1[index], p2[index]
+        for i in range(self.l_gen):
+            if p1[i] in p2[index]:
+                p1[i] = p2_num[0]
+                p2_index = np.delete(p2_num,0)
+            if p2[i] in p1[index]:
+                p2[i] = p1_num[0]
+                p1_index = np.delete(p1_num,0)
+        
+        self.child = [p1,p2][np.random.choice([0,1])]
         return self.child
     
     """Mutation"""
