@@ -47,42 +47,26 @@ class tsp_ga(operations):
                     params[name] = getattr(self,name)
         return params
     
-    def make_init_generation(self):
-        for i in range(self.n_pop):
-            self.inds[i] = np.random.permutation(np.arange(self.l_gen))
+    def make_init_generation(self, data_type, n_1 = None):
+        if data_type == "permutation":
+            print("Making permutaion individuals")
+            for i in range(self.n_pop):
+                self.inds[i] = np.random.permutation(np.arange(self.l_gen))
+        
+        elif data_type == "binary":
+            if n_1 == None:
+                raise VarueError("Set number of 1.")
+            elif n_1 > self.l_gen:
+                raise ValueError("The number of 1 is larger than l_gen.")
+            elif n_1 == 0 or n_1 == self.l_gen :
+                raise ValueError("There are not 0 or 1 in gen.")
+            else :
+                base_array = np.array([int(0) for i in range(self.l_gen - n_1)]+[int(1) for j in range(n_1)])
+                for i in range(self.n_pop) :
+                    self.inds[i] = np.random.permutation(base_array)
+                    
         self.inds = self.inds.astype(int)
         self.init_ind = self.inds
-    
-    def Crossover(self,p1,p2):
-        if self.crs_ratio == None:
-            raise ValueError("crs_ratio is not set.")
-        if np.random.random() <= self.pb_crs:
-            crs_func = np.random.choice(self.crs_funcs, p = self.crs_ratio)
-            self.child = crs_func(p1,p2)
-        else :
-            self.child = [p1,p2][np.random.choice([0,1])]
-        
-    def Mutation(self,parent):
-        if self.mut_ratio == None:
-            raise ValueError("mut_ratio is not set.")
-        if np.random.random() <= self.pb_mut:
-            mut_func = np.random.choice(self.mut_funcs, p = self.mut_ratio)
-            self.child = mut_func(parent)
-        else :
-            self.child = parent
-    
-    def GMutation(self,parent,generation,cycle,extra_mut):
-        if self.mut_ratio == None:
-            raise ValueError("mut_ratio is not set.")
-        if generation % cycle == 0:
-            probability = extra_mut
-        else :
-            probability = self.pb_mut
-        if np.random.random() <= probability:
-            mut_func = np.random.choice(self.mut_funcs, p = self.mut_ratio)
-            self.child = mut_func(parent)
-        else :
-            self.child = parent
     
     def get_best_individuals(self):
         self.best_ind = self.inds[np.argmax(self.fitness)]

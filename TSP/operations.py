@@ -11,12 +11,13 @@ class operations(object):
         self.n_parents = n_parents
         # ----------- functions
         self.slct_funcs= [self.tournament_selection, self.elete_selection, self.roulette_selection]
-        self.crs_funcs = [self.cycle_crossover, self.op_order_crossover,self.order_based_crossover]
+        self.crs_funcs = [self.cycle_crossover, self.op_order_crossover,
+                          self.order_based_crossover, self.position_based_crossover]
         self.mut_funcs = [self.swap_mutation, self.inversion_mutation, self.scramble_mutation,
                      self.translocation_mutation]
         self.funcs = {}
         self.funcs["Selection"] = ["tournament", "elete", "roulette"]
-        self.funcs["Crossover"] = ["cycle", "op_order","order_based"]
+        self.funcs["Crossover"] = ["cycle", "op_order","order_based","position_based"]
         self.funcs["Mutation"]  = ["swap", "inversion", "scramble", "translocation"]
         print("------- Information of Genetic Algorithm operation  -------")
         print(self.funcs)
@@ -84,6 +85,38 @@ class operations(object):
         indexer = np.array(fitness).argsort()
         parents = population[indexer[-e_size:]]
         return parents
+    
+    # ---------- main operation
+    def Crossover(self,p1,p2):
+        if self.crs_ratio == None:
+            raise ValueError("crs_ratio is not set.")
+        if np.random.random() <= self.pb_crs:
+            crs_func = np.random.choice(self.crs_funcs, p = self.crs_ratio)
+            self.child = crs_func(p1,p2)
+        else :
+            self.child = [p1,p2][np.random.choice([0,1])]
+        
+    def Mutation(self,parent):
+        if self.mut_ratio == None:
+            raise ValueError("mut_ratio is not set.")
+        if np.random.random() <= self.pb_mut:
+            mut_func = np.random.choice(self.mut_funcs, p = self.mut_ratio)
+            self.child = mut_func(parent)
+        else :
+            self.child = parent
+    
+    def GMutation(self,parent,generation,cycle,extra_mut):
+        if self.mut_ratio == None:
+            raise ValueError("mut_ratio is not set.")
+        if generation % cycle == 0:
+            probability = extra_mut
+        else :
+            probability = self.pb_mut
+        if np.random.random() <= probability:
+            mut_func = np.random.choice(self.mut_funcs, p = self.mut_ratio)
+            self.child = mut_func(parent)
+        else :
+            self.child = parent
 
     # -------------- permutation encoding
     """Crossover for permutation encoding"""
@@ -141,6 +174,29 @@ class operations(object):
         self.child = [c1,c2][np.random.choice([0,1])]
         return self.child
     
+    def position_based_crossover(parents1,parents2):
+        p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
+        chng_index = sorted(np.random.choice(range(10),np.random.choice(range(1,9)),replace=False))
+        c1_changed = p1[chng_index]
+        c2_changed = p2[chng_index]
+        c1_left = np.delete(p1,[int(np.where(p1 == i)[0]) for i in c2_changed])
+        c2_left = np.delete(p2,[int(np.where(p2 == i)[0]) for i in c1_changed])
+        c1, c2 = np.array([]), np.array([])
+        for i in range(10):
+            if i in chng_index:
+                c1 = np.append(c1, c2_changed[0])
+                c2 = np.append(c2, c1_changed[0])
+                c1_changed = np.delete(c1_changed, 0)
+                c2_changed = np.delete(c2_changed, 0)
+            else :
+                c1 = np.append(c1, c1_left[0])
+                c2 = np.append(c2, c1_left[0])
+                c1_left = np.delete(c1_left, 0)
+                c2_left = np.delete(c2_left, 0)
+        self.child = [c1,c2][np.random.choice([c1,c2])]
+        self.child = self.child.astype(int)
+        return self.child
+    
     """Mutation for permutation encoding"""
     def swap_mutation(self, parent):
         #print("swap mutation")
@@ -152,7 +208,7 @@ class operations(object):
     def inversion_mutation(self, parent):
         #print("inversion mutation")
         a,b = np.random.choice(np.arange(self.l_gen),2,replace=False)
-        pre_parent = parent.deepcopy()
+        pre_parent = copy.deepcopy(parent)
         if a > b:
             a, b = b,a
         for i in range(self.l_gen):
@@ -205,5 +261,36 @@ class operations(object):
         return self.child
     
     # ----------- binary encoding
+    """Crossover"""
+    def op_crossover(self,parents1,parents2):
+        p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
+        slice_index = np.random.choice(range(1,self.l_gen))
+        child1 = np.append(p1[:slice_index], p2[slice_index:])
+        child2 = np.append(p2[:slice_index], p1[slice_index:])
+        self.child = [child1, child2][np.random.choice([0,1])]
+        return self.child
 
+    def tp_crossover(self,parents1,parents2):
+        p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
+        slice_index = sorted(np.random.choice(range(1,self.l_gen),2,replace=False))
+        # ----- parent1 + parent2 + parent1
+        child1 = np.append(p1[:slice_index[0]], p2[slice_index[0]:slice_index[1]])
+        child1 = np.append(child1, p1[slice_index[1]:])
+        # ----- parent2 + parent1 + parent2
+        child2 = np.append(p2[:slice_index[0]], p1[slice_index[0]:slice_index[1]])
+        child2 = np.append(child2, p2[slice_index[1]:])
+        self.child = [child1, child2][np.random.choice([0,1])]
+        return self.child
+    
+    def uniform_crossover(parents1, parents2):
+        p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
+        parents = np.concatenate([p1.reshape(1,-1),p2.reshape(1,-1)],axis=0)
+        child = np.array([])
+        for i in xrange(self.l_gen):
+            index = np.random.choice([0,1])
+            child = np.append(child,parents[index,i]) 
+        slef.child = child
+        return self.child
+    
+    """Mutation"""
 
