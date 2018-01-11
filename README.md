@@ -1,4 +1,4 @@
-# Genetic algorithm with binary encoding and permutation encoding.  
+#Genetic algorithm with binary encoding and permutation encoding.  
 
 Python version : 2.7.x  
 numpy : 1.13.x  

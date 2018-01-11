@@ -4,26 +4,25 @@ import numpy as np
 from operations import operations
 
 class ga_main(operations):
-    def __init__(self, l_gene, n_pop, n_parents, e_size, pb_mut, pb_crs, 
-                 crs_ratio = None, mut_ratio = None, func_set= "permutation"):
-        super(ga_main, self).__init__(l_gene, n_parents, crs_ratio , mut_ratio, func_set= func_set)
+    def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, calc_type,
+                 crs_ratio = None, mut_ratio = None):
+        super(ga_main, self).__init__(l_gen, n_parents, calc_type, crs_ratio , mut_ratio)
         
         # ---------- function set type
-        self.func_set = func_set
+        self.calc_type = calc_type
         # ---------- change available
         self.n_pop = n_pop
-        self.e_size = e_size
         self.pb_mut = pb_mut
         self.pb_crs = pb_crs
         
         # ---------- set parameter
-        self.inds = np.empty([n_pop,l_gene])
+        self.inds = np.empty([n_pop,l_gen])
         self.fitness = None
-        self.best_ind_list = np.empty([0,l_gene])
-        self.best_fit_list = np.empty([0,l_gene])
+        self.best_ind_list = np.empty([0,l_gen])
+        self.best_fit_list = np.empty([0,l_gen])
         
         # ---------- available parameters
-        self._valid_params = ["l_gene","n_pop","n_parents","e_size","pb_mut",
+        self._valid_params = ["l_gen","n_pop","n_parents","pb_mut",
                              "pb_crs","crs_ratio", "mut_ratio"]       
     
     def set_params(self, **params):
@@ -58,27 +57,31 @@ class ga_main(operations):
             except:
                 print(str(param) + " = null")
                 
-    def make_init_generation(self, data_type, n_1 = None):
-        if data_type == "permutation":
+    def make_init_generation(self, n_1 = None):
+        if n_1 != None and n_1 != "random" and type(n_1) != int:
+            raise TypeError("n_1 should be 'random' or integer type.")
+        if self.calc_type == "permutation":
+            if n_1 != None:
+                raise ValueError("function type is permutation. n_1 is needless.")
             for i in range(self.n_pop):
-                self.inds[i] = np.random.permutation(np.arange(self.l_gene))
+                self.inds[i] = np.random.permutation(np.arange(self.l_gen))
         
-        elif data_type == "binary":
+        elif self.calc_type in ["binary","b+p" ]:
             if n_1 == None:
                 raise ValueError("Set number of 1.")
             # binary 
-            if n_1 == "random":
-                if self.func_set == "permuattion":
-                    raise ValueError("n_1 should not be random.")
+            if n_1 == "random" :
+                if self.calc_type == "b+p":
+                    raise ValueError("When binary + permutation type , n_1 should be integer.")
                 for i in range(self.n_pop) :
-                    self.inds[i] = np.random.choice([0,1], self.l_gene)
-            # permutation of binary type of gene 
-            elif n_1 > self.l_gene:
-                raise ValueError("The number of 1 is larger than l_gene.")
+                    self.inds[i] = np.random.choice([0,1], self.l_gen)
+            # permutation of binary type of gen 
+            elif n_1 > self.l_gen:
+                raise ValueError("The number of 1 is larger than l_gen.")
             elif n_1 == 0 or n_1 == self.l_gen :
                 raise ValueError("There are not 0 or 1 in gene.")
             else :
-                base_array = np.array([int(0) for i in range(self.l_gene - n_1)]+[int(1) for j in range(n_1)])
+                base_array = np.array([int(0) for i in range(self.l_gen - n_1)]+[int(1) for j in range(n_1)])
                 for i in range(self.n_pop) :
                     self.inds[i] = np.random.permutation(base_array)
                     
@@ -98,7 +101,7 @@ class ga_main(operations):
         for i in range(self.n_pop):
             """Start(0,0) , Goal(0,0)"""
             dist = np.sqrt(np.sum((target[self.inds[i,0],:]**2))) + np.sqrt(np.sum((target[self.inds[i,-1],:]**2)))
-            for j in range(self.l_gene-1):
+            for j in range(self.l_gen-1):
                 dist = dist + np.sqrt(np.sum((target[self.inds[i,j],:]-target[self.inds[i,j+1],:])**2))
             distance.append(dist)
         return distance
@@ -111,5 +114,7 @@ class ga_main(operations):
         fitness = [np.sum(self.inds[i]) for i in range(self.n_pop)]
         return fitness
     
-    def get_fitness(self, fitness):
-        self.fitness = fitness
+    def calc_sort_fitness(self):
+        fitness = [np.sum(np.where(self.inds[i] == 1)[0]) for i in range(self.n_pop)]
+        return fitness
+    
