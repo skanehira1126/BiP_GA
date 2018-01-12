@@ -16,14 +16,15 @@ class ga_main(operations):
         self.pb_crs = pb_crs
         
         # ---------- set parameter
-        self.inds = np.empty([n_pop,l_gen])
+        self.inds = np.empty([self.n_pop, self.l_gen])
         self.fitness = None
         self.best_ind_list = np.empty([0,l_gen])
         self.best_fit_list = np.empty([0,l_gen])
         
         # ---------- available parameters
-        self._valid_params = ["l_gen","n_pop","n_parents","pb_mut",
-                             "pb_crs","crs_ratio", "mut_ratio"]       
+        self._valid_params = ["l_gen","n_pop","calc_type","n_parents","pb_mut",
+                             "pb_crs","crs_ratio", "mut_ratio"]    
+        self._changeable_params = ["n_pop", "n_parents","pb_mut","pb_crs","crs_ratio", "mut_ratio"]
     
     def set_params(self, **params):
         if not params:
@@ -32,6 +33,8 @@ class ga_main(operations):
             name,_,_ = name.partition('__')
             if name not in self._valid_params:
                 raise ValueError("{} is not exist in input parameters .".format(name))
+            elif name not in self._changeable_params:
+                raise ValueError("{} is not changeable.".format(name))
             elif "ratio" in name:
                 self.set_ratios(**params)
             else:
@@ -106,15 +109,77 @@ class ga_main(operations):
             distance.append(dist)
         return distance
     
+    # ------ for traveling salseman problem : permutation encoding
     def calc_dist_fitness(self, target):
         fitness = [1./i for i in self.calc_distance(target)]
         return fitness
     
+    # ------ for onemax problem : binary encoding
     def calc_onemax_fitness(self):
         fitness = [np.sum(self.inds[i]) for i in range(self.n_pop)]
         return fitness
     
+    
+    # ------ for 01 sort problem : binary + permutation problem
     def calc_sort_fitness(self):
         fitness = [np.sum(np.where(self.inds[i] == 1)[0]) for i in range(self.n_pop)]
         return fitness
+    
+
+    
+    
+    
+    
+class permutation_ga(operations):
+    def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs,
+                 crs_ratio = None, mut_ratio = None):
+        super(permutation_ga, self).__init__(l_gen, n_parents, calc_type= "permutation", crs_ratio , mut_ratio)
+        # ---------- function set type
+        self.calc_type = "permutation"
+        # ---------- change available
+        self.n_pop = n_pop
+        self.pb_mut = pb_mut
+        self.pb_crs = pb_crs
+        
+        # ---------- set parameter
+        self.inds = np.empty([self.n_pop, self.l_gen])
+        self.fitness = None
+        self.best_ind_list = np.empty([0,l_gen])
+        self.best_fit_list = np.empty([0,l_gen])
+        
+        # ---------- available parameters
+        self._valid_params = ["l_gen","n_pop","n_parents","pb_mut",
+                             "pb_crs","crs_ratio", "mut_ratio"]    
+        self._changeable_params = ["n_pop", "n_parents","pb_mut","pb_crs","crs_ratio", "mut_ratio"]
+    
+
+    def make_init_generation(self):
+        for i in range(self.n_pop):
+            self.inds[i] = np.random.permutation(np.arange(self.l_gen))
+        self.inds = self.inds.astype(int)
+        self.init_ind = self.inds
+    
+    def get_best_individuals(self):
+        self.best_ind = self.inds[np.argmax(self.fitness)]
+        self.best_fit = max(self.fitness)
+        self.best_ind_list = np.append(self.best_ind_list,self.best_ind.reshape(1,-1),axis=0)
+        self.best_fit_list = np.append(self.best_fit_list,self.best_fit)
+        
+    
+    def calc_distance(self,target): 
+        """In tsp case , fitness is distance"""
+        distance = []
+        for i in range(self.n_pop):
+            """Start(0,0) , Goal(0,0)"""
+            dist = np.sqrt(np.sum((target[self.inds[i,0],:]**2))) + np.sqrt(np.sum((target[self.inds[i,-1],:]**2)))
+            for j in range(self.l_gen-1):
+                dist = dist + np.sqrt(np.sum((target[self.inds[i,j],:]-target[self.inds[i,j+1],:])**2))
+            distance.append(dist)
+        return distance
+    
+    # ------ for traveling salseman problem : permutation encoding
+    def calc_dist_fitness(self, target):
+        fitness = [1./i for i in self.calc_distance(target)]
+        return fitness
+
     

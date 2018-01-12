@@ -60,6 +60,41 @@ class operations(object):
         self.mut_ratio = mut_ratio
         self._valid_ratios = ["crs_ratio", "mut_ratio"]
         
+    def set_params(self, **params):
+        if not params:
+            return self
+        for name, value in params.items():
+            name,_,_ = name.partition('__')
+            if name not in self._valid_params:
+                raise ValueError("{} is not exist in input parameters .".format(name))
+            elif name not in self._changeable_params:
+                raise ValueError("{} is not changeable.".format(name))
+            elif "ratio" in name:
+                self.set_ratios(**params)
+            else:
+                setattr(self,name,value)            
+        return self   
+    
+    def get_params(self):
+        params = {}
+        for name in self._valid_params:
+            if getattr(self,name) != None:
+                if "func" in name:
+                    params[name] = getattr(self,name).__name__
+                else :
+                    params[name] = getattr(self,name)
+        return params
+    
+    def show_params(self):
+        print("----- Parameters ------")
+        params = self.get_params()
+        for param in self._valid_params:
+            try:
+                print(str(param) + " = "+ str(params[param]))
+            except:
+                print(str(param) + " = null")
+                
+        
     def get_funcs(self):
         return self.funcs
     
@@ -82,7 +117,7 @@ class operations(object):
         return self
     
     def get_ratios(self):
-        probs = {}
+        ratios = {}
         for name in self._valid_ratios:
             ratios[name] = getattr(self,name)
         return ratios
