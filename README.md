@@ -1,4 +1,4 @@
-#Genetic algorithm with binary encoding and permutation encoding.  
+# Genetic algorithm with binary encoding and permutation encoding.  
 
 Python version : 2.7.x  
 numpy : 1.13.x  
@@ -8,8 +8,12 @@ matplotlib : 2.1.x
 * operations.py  
 Include operations class.  
 * ga_main.py  
-Include tsp_ga class. tsp_ga class inherits operations class.  
+There are 3 type ga.  
+    * permutation_ga : For permutation problem 
+    * binary_ga : For binary problem  
+    * bip_ga : For permutation problem of binary type gen
+
 * example.ipynb  
-Examples of binary encoding and permutation encoding.
+Examples of 3 type ga.
 
 

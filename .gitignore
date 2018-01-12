@@ -104,5 +104,5 @@ ENV/
 .DS_Store
 
 # Test notebook
-TSP_test.ipynb
+*Test*.ipynb
 tsp_graph/*

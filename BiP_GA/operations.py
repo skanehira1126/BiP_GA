@@ -6,41 +6,18 @@ import numpy as np
 import copy
 
 class operations(object):
-    def __init__(self, l_gen, n_parents, calc_type, crs_ratio= None, mut_ratio= None):
+    def __init__(self, l_gen, n_parents, crs_ratio= None, mut_ratio= None):
         self.l_gen = l_gen
         self.n_parents = n_parents
         self.fitness = None
-        self.calc_type = calc_type
+        
+        # ---------- hidden parameters
+        self._valid_params=["l_gen","n_parents","crs_ratio", "mut_ratio"]  
+        self._changeable_params = ["n_parents","crs_ratio", "mut_ratio"]
         # ----------- functions
         self.slct_funcs= [self.tournament_selection, self.elete_selection, self.roulette_selection]
         self.funcs = {}
         self.funcs["Selection"] = ["tournament", "elete", "roulette"]
-        if self.calc_type == "permutation":
-            self.crs_funcs = [self.cycle_crossover, self.op_order_crossover,
-                              self.order_based_crossover, self.position_based_crossover]
-            self.mut_funcs = [self.swap_mutation, self.inversion_mutation, self.scramble_mutation,
-                         self.translocation_mutation]
-            self.funcs["Crossover"] = ["cycle", "op_order", "order_based", "position_based"]
-            self.funcs["Mutation"]  = ["swap", "inversion", "scramble", "translocation"]
-            
-        elif self.calc_type == "binary":
-            self.crs_funcs = [self.op_crossover, self.tp_crossover, self.uniform_crossover]
-            self.mut_funcs = [self.substitution_mutation, self.inversion_mutation, self.scramble_mutation,
-                         self.translocation_mutation]
-            self.funcs["Crossover"] = ["op", "tp", "uniform"]
-            self.funcs["Mutation"]  = ["substitution", "inversion", "scramble", "translocation"]
-        elif self.calc_type == "b+p":
-            self.crs_funcs = [self.bp_uniform_crossover]
-            self.mut_funcs = [self.bp_swap_mutation, self.inversion_mutation, self.scramble_mutation, self.translocation_mutation]
-            self.funcs["Crossover"] = ["bp_uniform"]
-            self.funcs["Mutation"]  = ["bp_swap", "inversion", "scramble", "translocation"]
-        else :
-            raise ValueError("calc_type should be permutation or binary.")
-        
-        print("------- Information of Genetic Algorithm operation  -------")
-        print("calclation type : " + self.calc_type) 
-        for func in self.funcs:
-            print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
         
         # ------ Operation ratios 
         for ratio in [crs_ratio, mut_ratio]:
@@ -53,10 +30,8 @@ class operations(object):
         if mut_ratio != None:
             mut_ratio = [float(i) for i in mut_ratio]
         
-        if calc_type != "b+p":
-            self.crs_ratio = crs_ratio
-        else :
-            self.crs_ratio = [1]
+        
+        self.crs_ratio = crs_ratio
         self.mut_ratio = mut_ratio
         self._valid_ratios = ["crs_ratio", "mut_ratio"]
         
@@ -126,7 +101,9 @@ class operations(object):
         self.fitness = fitness
         
     """Selection"""    
-    def tournament_selection(self, t_size, p_size, population):
+    def tournament_selection(self, t_size, population, p_size= None):
+        if p_size == None:
+            p_size = self.n_parents
         parents = np.empty([0,self.l_gen])
         while parents.shape[0] < p_size:
             tounament = np.random.choice(range(len(population)),t_size)
@@ -135,16 +112,20 @@ class operations(object):
                                 ,axis=0)
         return parents
     
-    def roulette_selection(self, p_size, population):
+    def roulette_selection(self, population, p_size= None):
+        if p_size == None:
+            p_size = self.n_parents
         sum_fitness = sum(self.fitness)
         probability = [i/sum(self.fitness) for i in self.fitness]
         parents = population[np.random.choice(xrange(len(population)), p_size,
                                               p = probability, replace = False)]
         return parents
     
-    def elete_selection(self, e_size, population):
+    def elete_selection(self, population, p_size= None):
+        if p_size == None:
+            p_size = self.n_parents
         indexer = np.array(self.fitness).argsort()
-        parents = population[indexer[-e_size:]]
+        parents = population[indexer[-p_size:]]
         return parents
     
     # ---------- main operation
