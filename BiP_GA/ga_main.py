@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from operations import operations
+from BiP_GA.operations import operations
 
 class permutation_ga(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs,

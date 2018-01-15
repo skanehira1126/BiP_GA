@@ -310,7 +310,7 @@ class operations(object):
     """Mutation"""
     def substitution_mutation(self, parent): # binary
         parent = copy.deepcopy(parent)
-        position = np.random.choice(range(self.l_gen), np.random.choice(range(1,self.l_gen/4)), replace=False)
+        position = np.random.choice(range(self.l_gen), np.random.choice(range(1,int(self.l_gen/4))), replace=False)
         for i in position:
             parent[i] = np.abs(parent[i]-1)
         self.child = parent
