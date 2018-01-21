@@ -184,4 +184,70 @@ class bip_ga(operations):
     # ------ for 01 sort problem : binary + permutation problem
     def calc_sort_fitness(self):
         fitness = [np.sum(np.where(self.inds[i] == 1)[0]) for i in range(self.n_pop)]
-        return fitness    
+        return fitness   
+    
+class multi_bip_ga(operations):
+    def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
+                 crs_ratio = [1], mut_ratio = None):
+        super(multi_bip_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
+        
+        # ---------- function set type
+        self.crs_funcs = [self.mbp_uniform_crossover]
+        self.mut_funcs = [self.bp_swap_mutation, self.inversion_mutation, self.scramble_mutation, self.translocation_mutation]
+        self.funcs["Crossover"] = ["mbp_uniform"]
+        self.funcs["Mutation"]  = ["bp_swap", "inversion", "scramble", "translocation"]
+        
+        # ---------- change available
+        self.n_pop = n_pop
+        self.pb_mut = pb_mut
+        self.pb_crs = pb_crs
+        
+        # ---------- set parameter
+        self.inds = np.empty([self.n_pop, self.l_gen])
+        self.fitness = None
+        self.best_ind_list = np.empty([0, self.l_gen])
+        self.best_fit_list = np.empty([0, self.l_gen])
+        
+        # ---------- available parameters
+        self._valid_params.extend(["pb_crs","pb_mut"])
+        self._changeable_params.extend(["pb_crs","pb_mut"])
+        
+        print("------- Information of Genetic Algorithm operation  -------")
+        print("calclation type : multi binary permutation") 
+        for func in self.funcs:
+            print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
+                
+    def make_init_generation(self, n_list): # binary type
+        self.gen_type = len(n_list)
+        if type(n_list) != list:
+            raise TypeError("n_1 should be list type.")
+        
+        if sum(n_list) != self.l_gen:
+            raise ValueError("The sum of n_list should be same l_gen.")
+        else :
+            base_array = []
+            for i , n in enumerate(n_list):
+                base_array.extend([int(i) for x in range(n)])
+            for i in range(self.n_pop) :
+                self.inds[i] = np.random.permutation(base_array)
+                    
+        self.inds = self.inds.astype(int)
+        self.init_ind = self.inds
+    
+    def get_best_individuals(self):
+        self.best_ind = self.inds[np.argmax(self.fitness)]
+        self.best_fit = max(self.fitness)
+        self.best_ind_list = np.append(self.best_ind_list,self.best_ind.reshape(1,-1),axis=0)
+        self.best_fit_list = np.append(self.best_fit_list,self.best_fit)
+        
+    
+    # ------ for 01 sort problem : binary + permutation problem
+    def calc_sort_fitness(self):
+        fitness = []
+        for i in range(self.n_pop):
+            fit = 0
+            for l in range(self.l_gen):
+                fit = fit + self.inds[i][l] * l
+            fitness.append(fit)
+        return fitness  
+    

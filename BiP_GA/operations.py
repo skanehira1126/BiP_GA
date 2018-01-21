@@ -22,9 +22,9 @@ class operations(object):
         # ------ Operation ratios 
         for ratio in [crs_ratio, mut_ratio]:
             if type(ratio) != list and type(ratio) != np.ndarray and ratio != None:
-                raise TypeError("Probability should be list or numpy.ndarray")
+                raise TypeError("Probability should be list or numpy.ndarray.")
             if ratio != None and sum(ratio) != 1:
-                raise ValueError("Sum ob probability should be 1.")
+                raise ValueError("Sum of probability should be 1.")
         if crs_ratio != None:
             crs_ratio = [float(i) for i in crs_ratio]
         if mut_ratio != None:
@@ -273,18 +273,18 @@ class operations(object):
     # -------------- binary + permutation encoding 
     def bp_uniform_crossover(self, parents1, parents2):
         c1, c2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
-        # check same value 
+        # check different value 
         index_12 = np.where(np.abs(parents1 - parents2) == 1)[0]
         if len(index_12) == 0:
             if c1.all() == c2.all():
-                self.child = [c1,c2][np.random.choice([0,1])]
+                self.child = c1
                 self.child = self.child.astype(int)
                 return self.child
             else :
                 raise ValueError("Unexpected error.")
         index_1 = np.where(parents1 == 1)[0]
         index_2 = np.where(parents2 == 1)[0]
-        # cross point of parents1 and p2arents
+        # cross point of parents1 and parents2
         cros_ind_1 = [i for i in index_1 if i in index_12]
         cros_ind_2 = [i for i in index_2 if i in index_12]
         
@@ -306,6 +306,54 @@ class operations(object):
         self.child = [c1,c2][np.random.choice([0,1])]
         self.child = self.child.astype(int)
         return self.child
+    # -------------- multi binary + permutation encoding 
+    def mbp_uniform_crossover(self, parents1, parents2):
+        p1, p2 = self.get_binary(parents1), self.get_binary(parents2)
+        try:    
+            self.gen_type
+        except:
+            self.gen_type = len(p1)+1
+        while True:
+            child = {}
+            for i in range(1,self.gen_type):
+                child[i] = self.bp_uniform_crossover(np.array(p1[i]), np.array(p2[i]))
+            if self.check_death(child):
+                break
+            else :
+                continue
+        self.child = self.get_ind(child)
+        return self.child
+    
+    def get_binary(self, individual):
+        genes = {}
+        for num in range(1,self.gen_type):
+            ind = []
+            for j in individual:
+                if j == num:
+                    ind.append(1)
+                else:
+                    ind.append(0)
+            genes[num] = ind
+        return genes
+
+    def get_ind(self, genes):
+        individual = [0 for i in range(self.l_gen)]
+        for i in genes:
+            for j in range(self.l_gen):
+                if genes[i][j] != 0:
+                    individual[j] = i
+        return individual
+    
+    def check_death(self, child):
+        if len(child) == 0:
+            return False
+        for l in range(self.l_gen):
+            sum_val = 0
+            for ntype in range(1,self.gen_type): 
+                sum_val = sum_val + child[ntype][l]
+            if sum_val >=2 :
+                return False       
+        return True  
     
     """Mutation"""
     def substitution_mutation(self, parent): # binary
