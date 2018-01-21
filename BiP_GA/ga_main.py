@@ -193,9 +193,9 @@ class multi_bip_ga(operations):
         
         # ---------- function set type
         self.crs_funcs = [self.mbp_uniform_crossover]
-        self.mut_funcs = [self.bp_swap_mutation, self.inversion_mutation, self.scramble_mutation, self.translocation_mutation]
+        self.mut_funcs = [self.swap_mutation, self.inversion_mutation, self.scramble_mutation, self.translocation_mutation]
         self.funcs["Crossover"] = ["mbp_uniform"]
-        self.funcs["Mutation"]  = ["bp_swap", "inversion", "scramble", "translocation"]
+        self.funcs["Mutation"]  = ["swap", "inversion", "scramble", "translocation"]
         
         # ---------- change available
         self.n_pop = n_pop

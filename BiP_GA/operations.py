@@ -321,7 +321,8 @@ class operations(object):
                 break
             else :
                 continue
-        self.child = self.get_ind(child)
+        self.child = np.array(self.get_ind(child))
+        self.child = self.child.astype(int)
         return self.child
     
     def get_binary(self, individual):
@@ -428,7 +429,6 @@ class operations(object):
     
     def bp_swap_mutation(self, parent):
         child = parent.copy()
-        # check diff
         index_0 = []
         index_1 = []
         for i in range(self.l_gen):
