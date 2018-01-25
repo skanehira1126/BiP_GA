@@ -97,7 +97,7 @@ class operations(object):
             ratios[name] = getattr(self,name)
         return ratios
     
-    def get_fitness(self, fitness):
+    def set_fitness(self, fitness):
         self.fitness = fitness
         
     """Selection"""    
@@ -182,14 +182,14 @@ class operations(object):
         self.child = [child1, child2][np.random.choice([0,1])]
         return self.child
     
-    def uniform_crossover(parents1, parents2):
+    def uniform_crossover(self, parents1, parents2):
         p1, p2 = copy.deepcopy(parents1), copy.deepcopy(parents2)
         parents = np.concatenate([p1.reshape(1,-1),p2.reshape(1,-1)],axis=0)
         child = np.array([])
         for i in xrange(self.l_gen):
             index = np.random.choice([0,1])
             child = np.append(child,parents[index,i]) 
-        slef.child = child
+        self.child = child
         return self.child
     
     # -------------- permutation encoding

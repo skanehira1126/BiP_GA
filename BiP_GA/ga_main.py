@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
 import numpy as np
+import sys
 from BiP_GA.operations import operations
 
 class permutation_ga(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs,
-                 crs_ratio = None, mut_ratio = None):
+                 crs_ratio = None, mut_ratio = None, chng_l_gen_flag = False):
         super(permutation_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
-        
+        # --------- flag
+        self.chng_l_gen_flag = chng_l_gen_flag
         # --------- function set
         self.crs_funcs = [self.cycle_crossover, self.op_order_crossover,
                           self.order_based_crossover, self.position_based_crossover]
@@ -47,6 +49,13 @@ class permutation_ga(operations):
         self.best_fit = max(self.fitness)
         self.best_ind_list = np.append(self.best_ind_list,self.best_ind.reshape(1,-1),axis=0)
         self.best_fit_list = np.append(self.best_fit_list,self.best_fit)
+    
+    def set_individuals(self, inds):
+        if type(inds) != np.ndarray:
+            raise TypeError("Individuals should be numpy.array type")
+        if inds.shape[1] != self.l_gen and self.chng_l_gen_flag == False:
+            raise ValueError("Length of gen is wrong.")
+        self.inds = inds
         
     def calc_distance(self,target): 
         """In tsp case , fitness is distance"""
@@ -66,9 +75,10 @@ class permutation_ga(operations):
 
 class binary_ga(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
-                 crs_ratio = None, mut_ratio = None):
+                 crs_ratio = None, mut_ratio = None, chng_l_gen_flag = False):
         super(binary_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
-        
+        # ---------- flag
+        self.chng_l_gen_flag = chng_l_gen_flag
         # ---------- function set type
         self.crs_funcs = [self.op_crossover, self.tp_crossover, self.uniform_crossover]
         self.mut_funcs = [self.substitution_mutation, self.inversion_mutation, self.scramble_mutation,
@@ -120,6 +130,13 @@ class binary_ga(operations):
         self.best_ind_list = np.append(self.best_ind_list,self.best_ind.reshape(1,-1),axis=0)
         self.best_fit_list = np.append(self.best_fit_list,self.best_fit)
         
+    def set_individuals(self, inds):
+        if type(inds) != np.ndarray:
+            raise TypeError("Individuals should be numpy.array type")
+        if inds.shape[1] != self.l_gen and self.chng_l_gen_flag == False:
+            raise ValueError("Length of gen is wrong.")
+        self.inds = inds
+    
     # ------ for onemax problem : binary encoding
     def calc_onemax_fitness(self):
         fitness = [np.sum(self.inds[i]) for i in range(self.n_pop)]
@@ -129,9 +146,10 @@ class binary_ga(operations):
     
 class bip_ga(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
-                 crs_ratio = [1], mut_ratio = None):
+                 crs_ratio = [1], mut_ratio = None, chng_l_gen_flag = False):
         super(bip_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
-        
+        # ---------- flag
+        self.chng_l_gen_flag = chng_l_gen_flag
         # ---------- function set type
         self.crs_funcs = [self.bp_uniform_crossover]
         self.mut_funcs = [self.bp_swap_mutation, self.inversion_mutation, self.scramble_mutation, self.translocation_mutation]
@@ -179,6 +197,13 @@ class bip_ga(operations):
         self.best_fit = max(self.fitness)
         self.best_ind_list = np.append(self.best_ind_list,self.best_ind.reshape(1,-1),axis=0)
         self.best_fit_list = np.append(self.best_fit_list,self.best_fit)
+    
+    def set_individuals(self, inds):
+        if type(inds) != np.ndarray:
+            raise TypeError("Individuals should be numpy.array type")
+        if inds.shape[1] != self.l_gen and self.chng_l_gen_flag == False:
+            raise ValueError("Length of gen is wrong.")
+        self.inds = inds
         
     
     # ------ for 01 sort problem : binary + permutation problem
@@ -188,9 +213,10 @@ class bip_ga(operations):
     
 class multi_bip_ga(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
-                 crs_ratio = [1], mut_ratio = None):
+                 crs_ratio = [1], mut_ratio = None, chng_l_gen_flag = False):
         super(multi_bip_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
-        
+        # ---------- flag
+        self.chng_l_gen_flag = chng_l_gen_flag
         # ---------- function set type
         self.crs_funcs = [self.mbp_uniform_crossover]
         self.mut_funcs = [self.swap_mutation, self.inversion_mutation, self.scramble_mutation, self.translocation_mutation]
@@ -239,7 +265,13 @@ class multi_bip_ga(operations):
         self.best_fit = max(self.fitness)
         self.best_ind_list = np.append(self.best_ind_list,self.best_ind.reshape(1,-1),axis=0)
         self.best_fit_list = np.append(self.best_fit_list,self.best_fit)
-        
+    
+    def set_individuals(self, inds):
+        if type(inds) != np.ndarray:
+            raise TypeError("Individuals should be numpy.array type")
+        if inds.shape[1] != self.l_gen and self.chng_l_gen_flag == False:
+            raise ValueError("Length of gen is changed.")
+        self.inds = inds
     
     # ------ for 01 sort problem : binary + permutation problem
     def calc_sort_fitness(self):
