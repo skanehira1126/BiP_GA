@@ -11,6 +11,12 @@ class operations(object):
         self.n_parents = n_parents
         self.fitness = None
         
+        # change ratio
+        if type(crs_ratio) == np.ndarray:
+            crs_ratio = list(crs_ratio)
+        if type(mut_ratio) == np.ndarray:
+            mut_ratio = list(mut_ratio)
+        
         # ---------- hidden parameters
         self._valid_params=["l_gen","n_parents","crs_ratio", "mut_ratio"]  
         self._changeable_params = ["n_parents","crs_ratio", "mut_ratio"]
@@ -21,9 +27,11 @@ class operations(object):
         
         # ------ Operation ratios 
         for ratio in [crs_ratio, mut_ratio]:
-            if type(ratio) != list and type(ratio) != np.ndarray and ratio != None:
+            if ratio == None:
+                continue
+            if type(ratio) != list and ratio != None:
                 raise TypeError("Probability should be list or numpy.ndarray.")
-            if ratio != None and sum(ratio) != 1:
+            elif ratio != None and sum(ratio) != 1:
                 raise ValueError("Sum of probability should be 1.")
         if crs_ratio != None:
             crs_ratio = [float(i) for i in crs_ratio]
@@ -147,7 +155,7 @@ class operations(object):
         else :
             self.child = parent
     
-    def GMutation(self,parent,generation,cycle,extra_mut):
+    def GMutation(self, parent , generation , cycle , extra_mut):
         if self.mut_ratio == None:
             raise ValueError("mut_ratio is not set.")
         if generation % cycle == 0:

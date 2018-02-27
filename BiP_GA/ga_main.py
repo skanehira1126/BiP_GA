@@ -4,10 +4,10 @@ import numpy as np
 import sys
 from BiP_GA.operations import operations
 
-class permutation_ga(operations):
+class permutation(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs,
-                 crs_ratio = None, mut_ratio = None, chng_l_gen_flag = False):
-        super(permutation_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
+                 crs_ratio = None, mut_ratio = None, chng_l_gen_flag = False, print_flag = True):
+        super(permutation, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
         # --------- flag
         self.chng_l_gen_flag = chng_l_gen_flag
         # --------- function set
@@ -33,16 +33,19 @@ class permutation_ga(operations):
         self._valid_params.extend(["pb_crs","pb_mut"])
         self._changeable_params.extend(["pb_crs","pb_mut"])
         
-        print("------- Information of Genetic Algorithm operation  -------")
-        print("calclation type : permutation") 
-        for func in self.funcs:
-            print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
+        if print_flag :
+            print("------- Information of Genetic Algorithm operation  -------")
+            print("calclation type : permutation") 
+            for func in self.funcs:
+                print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
+    
                 
     def make_init_generation(self):
         for i in range(self.n_pop):
             self.inds[i] = np.random.permutation(np.arange(self.l_gen))
         self.inds = self.inds.astype(int)
         self.init_ind = self.inds
+        return self.inds
     
     def get_best_individuals(self):
         self.best_ind = self.inds[np.argmax(self.fitness)]
@@ -73,10 +76,10 @@ class permutation_ga(operations):
         fitness = [1./i for i in self.calc_distance(target)]
         return fitness
 
-class binary_ga(operations):
+class binary(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
-                 crs_ratio = None, mut_ratio = None, chng_l_gen_flag = False):
-        super(binary_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
+                 crs_ratio = None, mut_ratio = None, chng_l_gen_flag = False, print_flag = True):
+        super(binary, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
         # ---------- flag
         self.chng_l_gen_flag = chng_l_gen_flag
         # ---------- function set type
@@ -97,10 +100,11 @@ class binary_ga(operations):
         self.best_ind_list = np.empty([0,self.l_gen])
         self.best_fit_list = np.empty([0,self.l_gen])
         
-        print("------- Information of Genetic Algorithm operation  -------")
-        print("calclation type : binary" ) 
-        for func in self.funcs:
-            print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
+        if print_flag :
+            print("------- Information of Genetic Algorithm operation  -------")
+            print("calclation type : binary" ) 
+            for func in self.funcs:
+                print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
         
         # ---------- available parameters
         self._valid_params.extend(["pb_crs","pb_mut"])
@@ -123,6 +127,7 @@ class binary_ga(operations):
                     
         self.inds = self.inds.astype(int)
         self.init_ind = self.inds
+        return self.inds
     
     def get_best_individuals(self):
         self.best_ind = self.inds[np.argmax(self.fitness)]
@@ -144,10 +149,10 @@ class binary_ga(operations):
     
 
     
-class bip_ga(operations):
+class bip(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
-                 crs_ratio = [1], mut_ratio = None, chng_l_gen_flag = False):
-        super(bip_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
+                 crs_ratio = [1], mut_ratio = None, chng_l_gen_flag = False, print_flag = True):
+        super(bip, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
         # ---------- flag
         self.chng_l_gen_flag = chng_l_gen_flag
         # ---------- function set type
@@ -171,10 +176,11 @@ class bip_ga(operations):
         self._valid_params.extend(["pb_crs","pb_mut"])
         self._changeable_params.extend(["pb_crs","pb_mut"])
         
-        print("------- Information of Genetic Algorithm operation  -------")
-        print("calclation type : binary permutation") 
-        for func in self.funcs:
-            print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
+        if print_flag :
+            print("------- Information of Genetic Algorithm operation  -------")
+            print("calclation type : binary permutation") 
+            for func in self.funcs:
+                print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
                 
     def make_init_generation(self, n_1): # binary type
         if type(n_1) != int:
@@ -191,6 +197,7 @@ class bip_ga(operations):
                     
         self.inds = self.inds.astype(int)
         self.init_ind = self.inds
+        return self.inds
     
     def get_best_individuals(self):
         self.best_ind = self.inds[np.argmax(self.fitness)]
@@ -211,9 +218,9 @@ class bip_ga(operations):
         fitness = [np.sum(np.where(self.inds[i] == 1)[0]) for i in range(self.n_pop)]
         return fitness   
     
-class multi_bip_ga(operations):
+class multi_bip(operations):
     def __init__(self, l_gen, n_pop, n_parents, pb_mut, pb_crs, 
-                 crs_ratio = [1], mut_ratio = None, chng_l_gen_flag = False):
+                 crs_ratio = [1], mut_ratio = None, chng_l_gen_flag = False, print_flag = True):
         super(multi_bip_ga, self).__init__(l_gen, n_parents, crs_ratio , mut_ratio)
         # ---------- flag
         self.chng_l_gen_flag = chng_l_gen_flag
@@ -238,10 +245,11 @@ class multi_bip_ga(operations):
         self._valid_params.extend(["pb_crs","pb_mut"])
         self._changeable_params.extend(["pb_crs","pb_mut"])
         
-        print("------- Information of Genetic Algorithm operation  -------")
-        print("calclation type : multi binary permutation") 
-        for func in self.funcs:
-            print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
+        if print_flag :
+            print("------- Information of Genetic Algorithm operation  -------")
+            print("calclation type : multi binary permutation") 
+            for func in self.funcs:
+                print(func + ": [" + ", ".join(self.funcs[func]) + " ]")
                 
     def make_init_generation(self, n_list): # binary type
         self.gen_type = len(n_list)
@@ -259,6 +267,7 @@ class multi_bip_ga(operations):
                     
         self.inds = self.inds.astype(int)
         self.init_ind = self.inds
+        return self.inds
     
     def get_best_individuals(self):
         self.best_ind = self.inds[np.argmax(self.fitness)]
