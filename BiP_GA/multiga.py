@@ -7,6 +7,8 @@ import random
 
 class multi_GA(object):
     def __init__(self, code_type, operation = "both"):
+        # ----- emigration flag 
+        self.__emigration_flag = False
         # ----- coding_type
         self.ope = operation
         if operation not in ["both" , "either"]:
@@ -192,6 +194,7 @@ class multi_GA(object):
                 self.individuals[i] = self.coding[i].make_init_generation(**param)
                 
     def set_emigration(self, interval, inds, etype= "random"):
+        self.__emigration_flag = True
         if inds > self.min_pop:
                 raise ValueError("individuals is too large.")
         self._emigration_param = {}
@@ -247,21 +250,25 @@ class multi_GA(object):
                 self.coding[i].set_individuals(offspring)
                 self.individuals[i] = offspring
                 
+                if self.__emigration_flag == True :
+                    if generation % self._emigration_param["interval"] == 0:
+                        continue
+                
                 # calculate fitness
                 fitness = eval_func(self.individuals[i])
                 self.coding[i].set_fitness(fitness)
                 self.coding[i].get_best_individuals()
-                
-                
+                                
                 print("{} block best fitness: ".format(i)+ str(max(self.coding[i].fitness)))
             
-            if generation % self._emigration_param["interval"] == 0:
+            if self.__emigration_flag == True and generation % self._emigration_param["interval"] == 0:
                 new_inds = self.emigration(self._emigration_param)
                 for i in self.coding.keys():
                     self.coding[i].set_individuals(new_inds[i])
                     self.individuals[i] = new_inds[i]
                     fitness = eval_func(self.individuals[i])
                     self.coding[i].set_fitness(fitness)
+                    print("{} block best fitness: ".format(i)+ str(max(self.coding[i].fitness)))
                 
             generation += 1
             if generation > converge:

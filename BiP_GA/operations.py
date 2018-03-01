@@ -124,9 +124,10 @@ class operations(object):
         if p_size == None:
             p_size = self.n_parents
         sum_fitness = sum(self.fitness)
-        probability = [i/sum(self.fitness) for i in self.fitness]
-        parents = population[np.random.choice(xrange(len(population)), p_size,
-                                              p = probability, replace = False)]
+        if sum_fitness == None:
+            raise ValueError("fitness is wrong")
+        probability = [float(i)/sum_fitness for i in self.fitness]
+        parents = population[np.random.choice(xrange(len(population)), p_size, p = probability, replace = False)]
         return parents
     
     def elete_selection(self, population, p_size= None):
