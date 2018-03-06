@@ -250,6 +250,8 @@ class multi_GA(object):
                 self.coding[i].set_individuals(offspring)
                 self.individuals[i] = offspring
                 
+                
+                #----- When emigrate, needless to calclate fitness 
                 if self.__emigration_flag == True :
                     if generation % self._emigration_param["interval"] == 0:
                         continue
@@ -277,22 +279,44 @@ class multi_GA(object):
                 
     def emigration(self, emigration_param):
         n_inds = emigration_param["individuals"]
-        if emigration_param["type"] != "random":
+        if emigration_param["type"] not in ["random", "fitness"] :
             raise ValueError("etype is random only now")
-        elif emigration_param["type"] == "random":
-            emigration_perm = np.random.permutation(self.coding.keys())
-            move_inds = {}
-            left_inds = {}
-            for i in self.coding.keys():
-                shuffle = random.sample(self.individuals[i], len(self.individuals[i]))
-                move_inds[i] = shuffle[:n_inds]
-                left_inds[i] = shuffle[n_inds:]
-        
-            new_individuals={}
-            for i in range(self.blocks):
-                new_individuals[emigration_perm[i]] = np.array(left_inds[emigration_perm[i]] + 
-                                                               move_inds[emigration_perm[i-1]])
-            
-        return new_individuals
+      
+        emigration_perm = np.random.permutation(self.coding.keys())
+        move_inds = {}
+        left_inds = {}
+        for i in self.coding.keys():
+            if emigration_param["type"] == "random":
+                move_inds[i], left_inds[i] = self.random_selection(self.individuals[i], n_inds)
+            elif emigration_param["type"] == "fitness" :
+                move_inds[i], left_inds[i] = self.fitness_selection(self.individuals[i], n_inds, self.coding[i].fitness)
                 
+        new_individuals={}
+        for i in range(self.blocks):
+            new_individuals[emigration_perm[i]] = np.array(left_inds[emigration_perm[i]] + 
+                                                               move_inds[emigration_perm[i-1]])
+        return new_individuals
+    
+    def random_selection(self, individuals, n_inds):
+        shuffle = random.sample(individuals, len(individuals))
+        move_inds = shuffle[:n_inds]
+        left_inds = shuffle[n_inds:]
+        return move_inds, left_inds
+    
+    def fitness_selection(self, individuals, n_inds, fitness):
+        inds = len(individuals)
+        prob = [float(i)/sum(fitness) for i in fitness]
+        move = list(np.random.choice(range(inds), size = n_inds, p = prob, replace=False))
+        left = []
+        for i in range(inds):
+            if i not in move:
+                left.append(i)
+        move_inds = list(individuals[move])
+        left_inds = list(individuals[left])
+        
+        return move_inds, left_inds
+                
+        
+        
+        
                  
